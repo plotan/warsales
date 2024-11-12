@@ -1,0 +1,8 @@
+{
+  "builds": [
+    {
+      "src": "views/**/*",
+      "use": "@vercel/static"
+    }
+  ]
+}
