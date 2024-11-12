@@ -1,0 +1,189 @@
+<div class="container mx-auto p-4">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-6 text-indigo-700">🏪 Inventory Management</h1>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-pink-400 to-pink-600 p-4 rounded-xl shadow-lg text-white">
+                <h3 class="text-sm font-semibold mb-1">Total Products</h3>
+                <p class="text-2xl font-bold"><%= products.length %> items</p>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 p-4 rounded-xl shadow-lg text-white">
+                <h3 class="text-sm font-semibold mb-1">Low Stock Items</h3>
+                <p class="text-2xl font-bold"><%= products.filter(p => p.stock < 10).length %> items</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-400 to-green-600 p-4 rounded-xl shadow-lg text-white">
+                <h3 class="text-sm font-semibold mb-1">Total Stock Value</h3>
+                <p class="text-2xl font-bold">IDR <%= products.reduce((sum, p) => sum + (p.price * p.stock), 0).toLocaleString('id-ID') %></p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-400 to-blue-600 p-4 rounded-xl shadow-lg text-white">
+                <h3 class="text-sm font-semibold mb-1">Avg. Product Price</h3>
+                <p class="text-2xl font-bold">IDR <%= products.length ? Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length).toLocaleString('id-ID') : 0 %></p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 mb-6">
+            <button onclick="showAddDialog()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-all transform hover:scale-105 flex items-center">
+                <span class="mr-2">➕</span> Add New Product
+            </button>
+            <button onclick="toggleLowStock()" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-lg transition-all transform hover:scale-105 flex items-center">
+                <span class="mr-2">⚠️</span> Show Low Stock
+            </button>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-indigo-50">
+                        <th class="px-6 py-3 text-left text-indigo-600">Product</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Price (IDR)</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Stock</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Stock Value</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Status</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTable">
+                    <% products.forEach(product => { %>
+                        <tr class="border-b border-indigo-100 hover:bg-indigo-50 transition-colors" data-stock="<%= product.stock %>">
+                            <td class="px-6 py-4 flex items-center">
+                                <span class="mr-2">📦</span>
+                                <%= product.name %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <%= product.price.toLocaleString('id-ID') %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="<%= product.stock < 10 ? 'text-red-500' : 'text-green-500' %> font-semibold">
+                                    <%= product.stock %>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <%= (product.price * product.stock).toLocaleString('id-ID') %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <% if (product.stock === 0) { %>
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">Out of Stock</span>
+                                <% } else if (product.stock < 10) { %>
+                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">Low Stock</span>
+                                <% } else { %>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">In Stock</span>
+                                <% } %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button onclick="editProduct('<%= JSON.stringify(product) %>')" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-all transform hover:scale-105 mr-2">
+                                    ✏️ Edit
+                                </button>
+                                <button onclick="deleteProduct('<%= product.id %>')" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition-all transform hover:scale-105">
+                                    🗑️ Delete
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Dialog -->
+    <div id="productDialog" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 id="dialogTitle" class="text-xl font-bold mb-4 flex items-center">
+                <span class="mr-2">📦</span>
+                <span>Add Product</span>
+            </h2>
+            <form id="productForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="productId" name="id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Product Name</label>
+                    <input type="text" id="productName" name="name" required 
+                        class="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Price (IDR)</label>
+                    <input type="number" id="productPrice" name="price" required 
+                        class="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Stock</label>
+                    <input type="number" id="productStock" name="stock" required 
+                        class="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeDialog()" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105">
+                        Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddDialog() {
+    document.getElementById('dialogTitle').innerHTML = '<span class="mr-2">📦</span><span>Add Product</span>';
+    document.getElementById('productId').value = '';
+    document.getElementById('productForm').reset();
+    document.getElementById('productDialog').style.display = 'flex';
+}
+
+function editProduct(productJson) {
+    const product = JSON.parse(productJson.replace(/&quot;/g, '"'));
+    document.getElementById('dialogTitle').innerHTML = '<span class="mr-2">✏️</span><span>Edit Product</span>';
+    document.getElementById('productId').value = product.id;
+    document.getElementById('productName').value = product.name;
+    document.getElementById('productPrice').value = product.price;
+    document.getElementById('productStock').value = product.stock;
+    document.getElementById('productDialog').style.display = 'flex';
+}
+
+function closeDialog() {
+    document.getElementById('productDialog').style.display = 'none';
+}
+
+async function deleteProduct(id) {
+    if (confirm('❌ Are you sure you want to delete this product?')) {
+        try {
+            const response = await fetch(`/inventory/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                location.reload();
+            } else {
+                throw new Error('Failed to delete product');
+            }
+        } catch (error) {
+            alert('Failed to delete product. Please try again.');
+        }
+    }
+}
+
+function handleSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch('/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData))
+    }).then(() => location.reload());
+}
+
+function toggleLowStock() {
+    const rows = document.querySelectorAll('#productsTable tr');
+    rows.forEach(row => {
+        const stock = parseInt(row.dataset.stock);
+        if (stock < 10) {
+            row.classList.toggle('bg-amber-50');
+        }
+    });
+}
+</script>

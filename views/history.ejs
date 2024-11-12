@@ -1,0 +1,84 @@
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6 text-indigo-700">📊 Transaction History</h1>
+
+    <!-- Profit Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-green-400 to-green-600 p-6 rounded-xl shadow-lg text-white">
+            <h3 class="text-lg font-semibold mb-2">Today's Profit</h3>
+            <p class="text-3xl font-bold">
+                IDR <%= todayProfit.toLocaleString('id-ID') %>
+            </p>
+            <p class="text-sm opacity-80 mt-2">
+                <%= todayTransactions %> transactions today
+            </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-400 to-blue-600 p-6 rounded-xl shadow-lg text-white">
+            <h3 class="text-lg font-semibold mb-2">Yesterday's Profit</h3>
+            <p class="text-3xl font-bold">
+                IDR <%= yesterdayProfit.toLocaleString('id-ID') %>
+            </p>
+            <p class="text-sm opacity-80 mt-2">
+                <%= yesterdayTransactions %> transactions yesterday
+            </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-400 to-purple-600 p-6 rounded-xl shadow-lg text-white">
+            <h3 class="text-lg font-semibold mb-2">Total Profit</h3>
+            <p class="text-3xl font-bold">
+                IDR <%= totalProfit.toLocaleString('id-ID') %>
+            </p>
+            <p class="text-sm opacity-80 mt-2">
+                <%= totalTransactions %> total transactions
+            </p>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-indigo-50">
+                        <th class="px-6 py-3 text-left text-indigo-600">Date</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Items</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Total Items</th>
+                        <th class="px-6 py-3 text-left text-indigo-600">Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
+                        <tr class="border-b border-indigo-100 hover:bg-indigo-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <%= new Date(transaction.date).toLocaleDateString('id-ID', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }) %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <% transaction.items.forEach(item => { %>
+                                    <div class="mb-1 flex items-center">
+                                        <span class="mr-2">🏷️</span>
+                                        <%= item.name %> (x<%= item.quantity %>) - 
+                                        <span class="font-semibold ml-1">
+                                            IDR <%= (item.price * item.quantity).toLocaleString('id-ID') %>
+                                        </span>
+                                    </div>
+                                <% }) %>
+                            </td>
+                            <td class="px-6 py-4 text-center font-semibold">
+                                <%= transaction.items.reduce((sum, item) => sum + item.quantity, 0) %>
+                            </td>
+                            <td class="px-6 py-4 font-semibold text-green-600">
+                                IDR <%= transaction.total.toLocaleString('id-ID') %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
