@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const asyncHandler = require('../middleware/asyncHandler');
+const {
+    getAllProducts,
+    getProduct,
+    updateProduct,
+    deleteProduct
+} = require('../utils/database');
 
-router.get('/', async (req, res) => {
-    const products = [];
-    for await (const { value } of db.getRange({ start: 'product:', end: 'product;' })) {
-        products.push(value);
-    }
+router.get('/', asyncHandler(async (req, res) => {
+    const products = await getAllProducts();
     res.render('inventory', { title: 'Inventory', products });
-});
+}));
 
-router.post('/', async (req, res) => {
+router.post('/', asyncHandler(async (req, res) => {
     const { id, name, price, stock } = req.body;
     const product = {
         id: id || Date.now().toString(),
@@ -18,13 +21,13 @@ router.post('/', async (req, res) => {
         price: parseInt(price),
         stock: parseInt(stock)
     };
-    await db.put(`product:${product.id}`, product);
+    await updateProduct(product.id, product);
     res.redirect('/inventory');
-});
+}));
 
-router.delete('/:id', async (req, res) => {
-    await db.remove(`product:${req.params.id}`);
+router.delete('/:id', asyncHandler(async (req, res) => {
+    await deleteProduct(req.params.id);
     res.json({ success: true });
-});
+}));
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
+const errorHandler = require('./src/middleware/errorHandler');
 
 // Import routes
 const inventoryRoutes = require('./src/routes/inventory');
@@ -27,6 +28,9 @@ app.get('/', (req, res) => {
 app.use('/inventory', inventoryRoutes);
 app.use('/transactions', transactionRoutes);
 app.use('/history', historyRoutes);
+
+// Error handling
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
